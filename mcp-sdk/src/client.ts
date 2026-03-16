@@ -3,7 +3,7 @@
  * Provides methods to interact with the CKB node and indexer.
  */
 
-import { RPC, Indexer, config, helpers } from "@ckb-lumos/lumos";
+import { RPC, Indexer, config, helpers, utils } from "@ckb-lumos/lumos";
 import { IndexerCell, GetCellsResult } from "./types/cell";
 import { Script } from "./types/script";
 
@@ -78,35 +78,31 @@ export class CkbClient {
       };
     }
 
-    const result = await this.rpc.call("get_cells", [
-      searchKey,
-      "asc",
-      `0x${limit.toString(16)}`,
-    ]);
+    const result = await this.indexer.getCells(searchKey);
 
     return (result.objects || []).map((cell: any) => ({
-      blockNumber: cell.block_number,
+      blockNumber: cell.blockNumber ?? "0x0",
       outPoint: {
-        txHash: cell.out_point.tx_hash,
-        index: cell.out_point.index,
+        txHash: cell.outPoint?.txHash ?? "",
+        index: cell.outPoint?.index ?? "0x0",
       },
       output: {
-        capacity: cell.output.capacity,
+        capacity: cell.cellOutput.capacity,
         lock: {
-          codeHash: cell.output.lock.code_hash,
-          hashType: cell.output.lock.hash_type,
-          args: cell.output.lock.args,
+          codeHash: cell.cellOutput.lock.codeHash,
+          hashType: cell.cellOutput.lock.hashType,
+          args: cell.cellOutput.lock.args,
         },
-        type: cell.output.type
+        type: cell.cellOutput.type
           ? {
-              codeHash: cell.output.type.code_hash,
-              hashType: cell.output.type.hash_type,
-              args: cell.output.type.args,
+              codeHash: cell.cellOutput.type.codeHash,
+              hashType: cell.cellOutput.type.hashType,
+              args: cell.cellOutput.type.args,
             }
           : null,
       },
-      outputData: cell.output_data,
-      txIndex: cell.tx_index,
+      outputData: cell.data,
+      txIndex: cell.txIndex ?? "0x0",
     }));
   }
 
@@ -138,42 +134,37 @@ export class CkbClient {
         },
       };
 
-      const params: any[] = [searchKey, "asc", "0x14"];
-      if (cursor) {
-        params.push(cursor);
-      }
-
-      const result = await this.rpc.call("get_cells", params);
+      const result = await this.indexer.getCells(searchKey);
 
       if (!result.objects || result.objects.length === 0) break;
 
       for (const cell of result.objects) {
         // Skip cells with type scripts (they might be UDT cells)
-        if (cell.output.type) continue;
+        if (cell.cellOutput.type) continue;
 
         cells.push({
-          blockNumber: cell.block_number,
+          blockNumber: cell.blockNumber ?? "0x0",
           outPoint: {
-            txHash: cell.out_point.tx_hash,
-            index: cell.out_point.index,
+            txHash: cell.outPoint?.txHash ?? "",
+            index: cell.outPoint?.index ?? "0x0",
           },
           output: {
-            capacity: cell.output.capacity,
+            capacity: cell.cellOutput.capacity,
             lock: {
-              codeHash: cell.output.lock.code_hash,
-              hashType: cell.output.lock.hash_type,
-              args: cell.output.lock.args,
+              codeHash: cell.cellOutput.lock.codeHash,
+              hashType: cell.cellOutput.lock.hashType,
+              args: cell.cellOutput.lock.args,
             },
           },
-          outputData: cell.output_data,
-          txIndex: cell.tx_index,
+          outputData: cell.data,
+          txIndex: cell.txIndex ?? "0x0",
         });
 
-        totalCapacity += BigInt(cell.output.capacity);
+        totalCapacity += BigInt(cell.cellOutput.capacity);
         if (totalCapacity >= requiredCapacity) break;
       }
 
-      cursor = result.last_cursor;
+      cursor = result.lastCursor;
       if (!cursor) break;
     }
 
@@ -231,7 +222,10 @@ export class CkbClient {
    * @param timeoutMs - Maximum wait time in milliseconds.
    * @returns The transaction status.
    */
-  async waitForTransaction(txHash: string, timeoutMs: number = 60000): Promise<any> {
+  async waitForTransaction(
+    txHash: string,
+    timeoutMs: number = 60000,
+  ): Promise<any> {
     const startTime = Date.now();
     while (Date.now() - startTime < timeoutMs) {
       const result = await this.getTransaction(txHash);
@@ -240,7 +234,9 @@ export class CkbClient {
       }
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
-    throw new Error(`Transaction ${txHash} not committed within ${timeoutMs}ms`);
+    throw new Error(
+      `Transaction ${txHash} not committed within ${timeoutMs}ms`,
+    );
   }
 
   /**
@@ -303,9 +299,8 @@ export class CkbClient {
       hd.key.signRecoverable(entry.message, privateKey),
     );
     const signedTx = lumosHelpers.sealTransaction(txSkeleton, signatures);
-    const tx = lumosHelpers.createTransactionFromSkeleton(signedTx);
 
-    const txHash = await this.sendTransaction(tx);
+    const txHash = await this.sendTransaction(signedTx);
     return { txHash, index: "0x0" };
   }
 }
