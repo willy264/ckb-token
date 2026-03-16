@@ -1,0 +1,71 @@
+target/
+.env
+*.exe
+.env.local
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
+.env.example
+
+# Node.js / pnpm
+node_modules/
+dist/
+build/
+pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+.pnpmfile.cjs
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.metals/
+.bloop/
+
+# Keys and secrets
+*.pem
+*.key
+.npmrc
+
+# Output
+.output/
+
+# Rust
+Cargo.lock
+.rustc_info.json
+**/.cargo/target/
+
+# TypeScript
+*.tsbuildinfo
+.turbo/
+.swc/
+.eslintcache
+
+# WASM / Contract artifacts
+**/*.wasm
+**/*.wasm.d.ts
+*.o
+*.a
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Development/Runtime
+.env.*.local
+*.pid
+debug.*
+.devenv/
+.devenv.flake.lock
+docker-compose.override.yml
+
+# Windows/OS
+Thumbs.db
+.node-version
+.nvmrc

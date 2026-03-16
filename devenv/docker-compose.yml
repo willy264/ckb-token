@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  ckb-node:
+    image: nervos/ckb:latest
+    container_name: ckb-devnet-node
+    ports:
+      - "8114:8114"    # RPC port
+      - "8115:8115"    # Network port
+    volumes:
+      - ckb-data:/var/lib/ckb
+      - ./ckb.toml:/var/lib/ckb/ckb.toml
+      - ./ckb-miner.toml:/var/lib/ckb/ckb-miner.toml
+    command: run --ba-advanced
+    environment:
+      - CKB_CHAIN=dev
+    restart: unless-stopped
+
+  ckb-miner:
+    image: nervos/ckb:latest
+    container_name: ckb-devnet-miner
+    depends_on:
+      - ckb-node
+    volumes:
+      - ckb-data:/var/lib/ckb
+      - ./ckb-miner.toml:/var/lib/ckb/ckb-miner.toml
+    command: miner
+    restart: unless-stopped
+
+  ckb-indexer:
+    image: nervos/ckb-indexer:latest
+    container_name: ckb-devnet-indexer
+    ports:
+      - "8116:8116"    # Indexer RPC port
+    depends_on:
+      - ckb-node
+    environment:
+      - CKB_RPC_URL=http://ckb-node:8114
+      - LISTEN_URI=0.0.0.0:8116
+    restart: unless-stopped
+
+volumes:
+  ckb-data:
+    driver: local

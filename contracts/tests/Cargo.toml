@@ -1,0 +1,16 @@
+[package]
+name = "xudt-tests"
+version = "0.1.0"
+edition = "2021"
+
+# Tests run on the host machine (not RISC-V), so we override the target.
+# Run with: cargo test -p xudt-tests
+# This ignores the workspace .cargo/config.toml RISC-V target.
+
+[dev-dependencies]
+ckb-testtool = "0.13"
+ckb-types = "0.116"
+
+[[test]]
+name = "xudt_tests"
+path = "src/xudt_tests.rs"

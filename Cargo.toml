@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "contracts/xudt-type-script",
+    "contracts/owner-lock-script",
+    "contracts/tests",
+]
+resolver = "2"

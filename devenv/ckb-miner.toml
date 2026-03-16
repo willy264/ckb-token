@@ -1,0 +1,12 @@
+# CKB Devnet Miner Configuration
+# Auto-mines blocks every 2 seconds for fast local development.
+
+[miner]
+# Client RPC URL — connects to the CKB node
+client = { rpc_url = "http://ckb-node:8114" }
+
+[[miner.workers]]
+worker_type = "Dummy"
+# Mine a block every 2000 milliseconds (2 seconds)
+delay_type = "Constant"
+value = 2000
