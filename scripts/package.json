@@ -1,0 +1,15 @@
+{
+  "name": "@ckb-token/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ckb-ccc/ccc": "^1.1.0",
+    "@ckb-lumos/lumos": "^0.22.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
