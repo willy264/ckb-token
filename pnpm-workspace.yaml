@@ -1,3 +1,4 @@
 packages:
   - "mcp-sdk"
   - "scripts"
+  - "frontend"
