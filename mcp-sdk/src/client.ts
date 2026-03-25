@@ -23,11 +23,15 @@ export class CkbClient {
     this.indexer = new Indexer(cfg.indexerUrl, cfg.rpcUrl);
     this.isMainnet = cfg.isMainnet ?? false;
 
-    // Initialize Lumos config
-    const networkConfig = this.isMainnet
-      ? config.predefined.LINA
-      : config.predefined.AGGRON4;
-    config.initializeConfig(networkConfig);
+    // Initialize Lumos config only if not already initialized
+    try {
+      config.getConfig();
+    } catch (e) {
+      const networkConfig = this.isMainnet
+        ? config.predefined.LINA
+        : config.predefined.AGGRON4;
+      config.initializeConfig(networkConfig);
+    }
   }
 
   /** Get the underlying RPC instance. */
@@ -258,7 +262,7 @@ export class CkbClient {
     const binaryBytes = (binary.length - 2) / 2; // Remove 0x prefix
     const capacity = BigInt(binaryBytes + 61) * 100_000_000n; // bytes + min cell
 
-    let txSkeleton = lumosHelpers.TransactionSkeleton({});
+    let txSkeleton = lumosHelpers.TransactionSkeleton({ cellProvider: this.indexer });
 
     const lumosLockScript = {
       codeHash: fromLockScript.codeHash,

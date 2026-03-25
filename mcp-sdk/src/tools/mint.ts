@@ -84,8 +84,8 @@ export async function mintToken(
   // Parse the recipient's lock script
   const recipientLock = addressToScript(toAddress);
 
-  // Build the transaction skeleton
-  let txSkeleton = helpers.TransactionSkeleton({});
+  // Build the transaction skeleton with cell provider from indexer
+  let txSkeleton = helpers.TransactionSkeleton({ cellProvider: client.getIndexer() });
 
   // Add the UDT output cell
   txSkeleton = txSkeleton.update("outputs", (outputs: any) =>
