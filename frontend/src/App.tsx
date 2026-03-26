@@ -314,7 +314,6 @@ function App() {
                 recipient={recipient}
                 setRecipient={setRecipient}
                 setTransferAmount={setTransferAmount}
-                syncProgress={syncProgress}
                 transferAmount={transferAmount}
                 transferring={transferring}
                 walletName={walletName}
@@ -335,6 +334,7 @@ function App() {
             formatTokenBalance={formatTokenBalance}
             isConnected={isConnected}
             lastSyncedAt={lastSyncedAt}
+            syncProgress={syncProgress}
             walletName={walletName}
           />
         </main>

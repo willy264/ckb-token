@@ -29,7 +29,6 @@ type LiveControlSurfaceProps = {
   address: string
   walletName: string
   client: boolean
-  syncProgress: { current: number; target: number } | null
   activeTypeScript: ccc.Script | null
   recipient: string
   setRecipient: (v: string) => void
@@ -48,7 +47,6 @@ export function LiveControlSurface({
   address,
   walletName,
   client,
-  syncProgress,
   activeTypeScript,
   recipient,
   setRecipient,
@@ -133,35 +131,6 @@ export function LiveControlSurface({
           <ReadoutRow label="Client status" value={client ? 'Ready to query chain' : 'Initializing client'} />
         </div>
 
-        <div className="mt-7 rounded-3xl border border-[#8df019]/18 bg-[#070a06] p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-[#8df019]">
-                {syncProgress ? 'Indexer synchronizing' : 'Indexer ready'}
-              </p>
-              <p className="mt-2 text-sm leading-7 text-zinc-400">
-                {syncProgress
-                  ? `Confirmation depth ${syncProgress.current} of ${syncProgress.target} blocks.`
-                  : 'The tracked deployment transaction has already cleared the progress window.'}
-              </p>
-            </div>
-
-            {syncProgress ? (
-              <RefreshCw className="mt-1 animate-spin text-[#8df019]/70" size={18} />
-            ) : (
-              <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#8df019]" />
-            )}
-          </div>
-
-          {syncProgress && (
-            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/8">
-              <div
-                className="h-full bg-[#8df019] transition-all duration-1000 ease-out"
-                style={{ width: `${Math.min(100, (syncProgress.current / syncProgress.target) * 100)}%` }}
-              />
-            </div>
-          )}
-        </div>
       </div>
     </motion.div>
   )
