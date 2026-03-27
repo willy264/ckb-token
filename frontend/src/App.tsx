@@ -19,6 +19,31 @@ const XUDT_TX_HASH = import.meta.env.VITE_XUDT_TX_HASH || import.meta.env.XUDT_T
 
 const TOKEN_DECIMALS = 8
 
+// Maps unique Type Script Hash OR Code Hash -> Metadata
+const TOKEN_REGISTRY: Record<string, { name: string; symbol: string; decimals: number }> = {
+  // Official CKB Aggron Testnet xUDT Standard
+  '0x25c29dc317811a6f6f3985a7a9ebc4838bd388d19d0feeecf0bcd60f6c0975bb': {
+    name: 'Axon',
+    symbol: 'AXN',
+    decimals: 8
+  },
+  // Specific Deployment Hash (Fallback/Legacy)
+  '0xe4fe8276f577382022d4f54877b82f7d9930f88cab5717d484fb4741ae9d1dd078cd600': { 
+    name: 'Aggron xUDT Primary', 
+    symbol: 'XUDT', 
+    decimals: 8 
+  },
+}
+
+type TokenInfo = {
+  name: string
+  symbol: string
+  decimals: number
+  balance: string
+  script: ccc.Script
+  hash: string
+}
+
 const pillClass =
   'inline-flex items-center rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.26em] text-zinc-300'
 
@@ -32,12 +57,18 @@ function addThousandsSeparators(value: string) {
 }
 
 function formatTokenBalance(rawBalance: string, decimals = TOKEN_DECIMALS) {
-  const normalized = rawBalance && /^\d+$/.test(rawBalance) ? rawBalance : '0'
-  const padded = normalized.padStart(decimals + 1, '0')
-  const whole = padded.slice(0, -decimals).replace(/^0+(?=\d)/, '') || '0'
-  const fraction = padded.slice(-decimals).replace(/0+$/, '').slice(0, 4)
-
-  return fraction ? `${addThousandsSeparators(whole)}.${fraction}` : addThousandsSeparators(whole)
+  if (rawBalance === '0' || !rawBalance) return '0.00'
+  
+  const balanceBN = BigInt(rawBalance)
+  const divisor = BigInt(10 ** decimals)
+  
+  const whole = (balanceBN / divisor).toString()
+  const fraction = (balanceBN % divisor).toString().padStart(decimals, '0')
+  const trimmedFraction = fraction.replace(/0+$/, '').slice(0, 8)
+  
+  const formattedWhole = addThousandsSeparators(whole)
+  
+  return trimmedFraction ? `${formattedWhole}.${trimmedFraction}` : `${formattedWhole}.00`
 }
 
 function formatSyncTime(value: Date | null) {
@@ -69,6 +100,7 @@ function App() {
   const [syncProgress, setSyncProgress] = useState<{ current: number; target: number } | null>(null)
 
   const [activeTypeScript, setActiveTypeScript] = useState<ccc.Script | null>(null)
+  const [tokens, setTokens] = useState<TokenInfo[]>([])
   const [recipient, setRecipient] = useState('')
   const [transferAmount, setTransferAmount] = useState('')
   const [transferring, setTransferring] = useState(false)
@@ -132,8 +164,7 @@ function App() {
         scriptSearchMode: 'exact',
       })
 
-      let total = 0n
-      let foundScript: ccc.Script | undefined = undefined
+      const tokenMap = new Map<string, { script: ccc.Script; balance: bigint }>()
 
       for await (const cell of cells) {
         const hasXudtType =
@@ -141,15 +172,51 @@ function App() {
 
         if (hasXudtType && cell.outputData.length >= 34) {
           const u128Bytes = ccc.bytesFrom(cell.outputData).slice(0, 16)
-          total += ccc.numLeFromBytes(u128Bytes)
-          if (!foundScript) {
-             foundScript = cell.cellOutput.type
+          const amount = ccc.numLeFromBytes(u128Bytes)
+          
+          const script = cell.cellOutput.type!
+          const scriptHash = script.hash()
+          
+          if (tokenMap.has(scriptHash)) {
+            tokenMap.get(scriptHash)!.balance += amount
+          } else {
+            tokenMap.set(scriptHash, { script, balance: amount })
           }
         }
       }
 
-      setBalance(total.toString())
-      setActiveTypeScript(foundScript || null)
+      const tokenList: TokenInfo[] = Array.from(tokenMap.values()).map(({ script, balance }) => {
+        const scriptHash = script.hash()
+        const codeHash = script.codeHash
+        
+        // Priority: Specific Script Hash > Broad Code Hash > Default
+        const metadata = TOKEN_REGISTRY[scriptHash] || TOKEN_REGISTRY[codeHash] || {
+          name: 'Unknown Token',
+          symbol: 'xUDT',
+          decimals: TOKEN_DECIMALS
+        }
+
+        return {
+          name: metadata.name,
+          symbol: metadata.symbol,
+          decimals: metadata.decimals,
+          balance: balance.toString(),
+          script,
+          hash: scriptHash
+        }
+      })
+
+      setTokens(tokenList)
+      
+      // Calculate total only for primary token or just overall sum? 
+      // For now, sum all if they share same decimals, or just use the first for total UI
+      const primaryTotal = tokenList.reduce((acc, t) => acc + BigInt(t.balance), 0n)
+      setBalance(primaryTotal.toString())
+      
+      if (tokenList.length > 0 && !activeTypeScript) {
+        setActiveTypeScript(tokenList[0].script)
+      }
+
       setLastSyncedAt(new Date())
       void checkSyncStatus()
     } catch (caughtError: unknown) {
@@ -171,7 +238,11 @@ function App() {
       }
 
       const recipientAddress = await ccc.Address.fromString(recipient, client)
-      const amountBigInt = BigInt(Math.floor(Number(transferAmount) * 10 ** TOKEN_DECIMALS))
+      
+      const selectedToken = tokens.find(t => t.script.hash() === activeTypeScript.hash())
+      const decimals = selectedToken?.decimals ?? TOKEN_DECIMALS
+      
+      const amountBigInt = BigInt(Math.floor(Number(transferAmount) * 10 ** decimals))
 
       const tx = ccc.Transaction.from({
         outputs: [
@@ -283,7 +354,7 @@ function App() {
 
         <main className="relative z-10 flex-1 pt-6 sm:pt-8">
           <section className="overflow-hidden border-b border-t border-white/10 bg-[#04050489] shadow-[0_34px_90px_rgba(0,0,0,0.55)] sm:px-8 lg:px-10">
-            <div className="grid lg:grid-cols-[minmax(0,1.2fr)_420px] xl:grid-cols-[minmax(0,1.2fr)_460px]">
+            <div className="grid lg:grid-cols-[minmax(0,1.2fr)_420px] xl:grid-cols-[minmax(0,1.2fr)_600px]">
               <HeroSection
                 configurationReady={configurationReady}
                 copiedField={copiedField}
@@ -314,6 +385,8 @@ function App() {
                 recipient={recipient}
                 setRecipient={setRecipient}
                 setTransferAmount={setTransferAmount}
+                tokens={tokens}
+                setActiveTypeScript={setActiveTypeScript}
                 transferAmount={transferAmount}
                 transferring={transferring}
                 walletName={walletName}
@@ -335,6 +408,7 @@ function App() {
             isConnected={isConnected}
             lastSyncedAt={lastSyncedAt}
             syncProgress={syncProgress}
+            tokens={tokens}
             walletName={walletName}
           />
         </main>

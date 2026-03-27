@@ -20,6 +20,7 @@ type DeploymentGridProps = {
   copiedField: string
   copyText: (val: string, key: string) => void
   syncProgress: { current: number; target: number } | null
+  tokens: { name: string; symbol: string; decimals: number; balance: string; script: any; hash: string }[]
 }
 
 const containerVariants = {
@@ -49,7 +50,8 @@ export function DeploymentGrid({
   OWNER_LOCK_TX_HASH,
   copiedField,
   copyText,
-  syncProgress
+  syncProgress,
+  tokens
 }: DeploymentGridProps) {
   const [devOpen, setDevOpen] = useState(false)
 
@@ -70,7 +72,9 @@ export function DeploymentGrid({
             {formatTokenBalance(balance)}
           </strong>
           <p className="mt-4 text-sm leading-7 text-zinc-400">
-            Live xUDT units currently associated with the connected wallet.
+            {tokens.length > 1 
+              ? `Aggregate balance across ${tokens.length} unique xUDT assets.`
+              : 'Live xUDT units currently associated with the connected wallet.'}
           </p>
           <p className="mt-8 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-zinc-500">
             Last sync

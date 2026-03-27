@@ -77,7 +77,7 @@ export function HeroSection({
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.4em] text-zinc-500 sm:mt-8">
         Ready to operate your treasury?
       </p>
-      <h1 className="mt-2 font-display text-[2rem] leading-[0.95] text-white sm:text-[3rem] lg:text-[4rem] xl:text-[4.4rem]">
+      <h1 className="mt-2 font-display text-[2rem] leading-[0.95] text-white sm:text-[3rem] lg:text-[4rem] xl:text-[4rem]">
         Manage xUDT balances and deployment state through a sharper command surface.
       </h1>
       <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
