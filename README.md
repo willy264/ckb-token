@@ -14,7 +14,6 @@ token/
 │   ├── xudt-type-script/         # Core token Type Script
 │   ├── owner-lock-script/        # Owner lock (mint authority)
 │   └── tests/                    # On-chain contract tests
-├── mcp-sdk/                      # MCP SDK for token operations
 ├── scripts/                      # Deployment and example scripts
 └── devenv/                       # Local development environment
 ```
