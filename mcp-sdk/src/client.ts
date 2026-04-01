@@ -17,7 +17,7 @@ export class CkbClient {
   private rpc: RPC;
   private indexer: Indexer;
   private isMainnet: boolean;
-
+ 
   constructor(cfg: CkbClientConfig) {
     this.rpc = new RPC(cfg.rpcUrl);
     this.indexer = new Indexer(cfg.indexerUrl, cfg.rpcUrl);

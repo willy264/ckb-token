@@ -12,6 +12,7 @@ target/
 
 # Node.js / pnpm
 node_modules/
+mcp-sdk/
 dist/
 build/
 pnpm-debug.log*
@@ -72,3 +73,4 @@ Thumbs.db
 # deployment vault
 .deployment-vault.md
 new-implementations.txt
+
