@@ -86,21 +86,7 @@ make deploy-devnet
 
 This deploys both the xUDT type script and owner lock script binaries to the local devnet. Note the transaction hashes printed — update your `.env` with `XUDT_TX_HASH` and `OWNER_LOCK_TX_HASH`.
 
-### 5. Build the MCP SDK
-
-```bash
-cd mcp-sdk
-pnpm install
-pnpm build
-```
-
-Or from the root:
-
-```bash
-make build-sdk
-```
-
-### 6. Mint Tokens
+### 5. Mint Tokens
 
 ```bash
 cd scripts
@@ -109,7 +95,7 @@ npx tsx mint-token.ts
 
 This mints an initial token supply to the owner address. Edit `mint-token.ts` to change the amount.
 
-### 7. Transfer Tokens
+### 6. Transfer Tokens
 
 ```bash
 cd scripts
@@ -118,7 +104,7 @@ npx tsx transfer-token.ts
 
 This transfers tokens between addresses. Edit `transfer-token.ts` to change the recipient and amount.
 
-### 8. Check Token Balance
+### 7. Check Token Balance
 
 ```bash
 cd scripts
@@ -134,16 +120,4 @@ This queries the token balance for a given address.
 - **Type Script args = owner lock hash**: 32-byte hash identifying who can mint.
 - **xUDT rule**: `sum(input amounts) == sum(output amounts)` UNLESS the owner lock is in inputs (for minting).
 - **Scripts return 0 for success**: Any non-zero return code rejects the transaction.
-
-## MCP SDK Tools
-
-The MCP SDK exposes the following tools:
-
-| Tool | Description |
-|------|-------------|
-| `mint_token` | Mint new tokens to an address |
-| `transfer_token` | Transfer tokens between addresses |
-| `burn_token` | Burn tokens to reduce supply |
-| `get_token_balance` | Query token balance of an address |
-| `deploy_contract` | Deploy a contract binary to the chain |
 

@@ -1,5 +1,7 @@
 target/
 mcp-sdk/
+mcp_sdk.md
+
 .env
 *.exe
 .env.local
